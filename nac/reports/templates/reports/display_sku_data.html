@@ -1,0 +1,268 @@
+{% extends "admin/base_site.html" %}
+{% load floppyforms %}
+{% load alliance_bundle %}
+{% load render_table from django_tables2 %}
+{% load staticfiles %}
+
+
+{% block extrastyle %}
+    {{ block.super }}
+    {% alliance_bundle 'shared-bower-highcharts' 'css' %}
+{% endblock %}
+
+{% block extrascript %}
+    {{ block.super }}
+    {% alliance_bundle 'shared-bower-highcharts' 'js' %}
+    <script type="text/javascript" src="{% static "reports/js/reports.js" %}"></script>
+{% endblock %}
+
+{% block bodyclass %}reports-viewer{% endblock %}
+
+{% block breadcrumb_icon %}
+    <img src="{% static 'newage/icons/orders.png' %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+    <a href="#">Reports</a>
+{% endblock %}
+
+{% block page_heading %}Reports{% endblock %}
+{% block page_subheading_wrapper %}{% endblock %}
+
+ 
+{% block content %}
+
+    <div id="report-index">
+        {%if price_data %}
+
+    <div> <center> <h2> <b>SKU PRICE IMPORTED DATA </b></h2>
+     </center> </div>
+    <form method="POST" action="{% url 'reports:sku_price_update' %}">{% csrf_token %}
+
+    <!-- Effective Date <input type="date" id="sel_date_picker" name="sel_date_picker"> -->
+    Effective Date : {{ effective_date }}
+     <div align="right"><input type="Submit" style="background-color:#fa0505;color:white" name="but1" value="Upload" > 
+    
+
+    <input type="Submit" name="but1" value="Cancel" style="background-color:#fa0505;color:white"></div>
+   
+    <p>
+    <div align="right"><b>{{ ok_records }} out of  {{ total_records}} </b> price records can be updated. </div> 
+    </p>
+            
+    <table>
+        <thead>
+            <tr>
+                <th><center>SNo</th>
+                <th><center>SKU Id</th>    
+                <th><center>SKU Name</th>
+                
+                <th ><center>SKU Retail Price </th>
+                <th > <center>SKU Wholesale Price</th>
+                <th > <center>SKU Cost Price</th>    
+                
+                <th><center>Status</center></th>
+
+            </tr>
+        </thead>
+
+        <tbody>
+              
+            {%for data in price_data %}
+            <tr>
+               <center>
+                <td align="center"> <h4>{{ forloop.counter }}  </td>
+
+                {%if  data.error_sku_id  %}
+
+                
+                <td  align="center"> <font color='red'>   {{ data.sku_name }}</font> </td>             
+                <td  align="center"> <font color='red'>   {{ data.retail_price }}</font> </td>
+
+                <td  align="center"> <font color='red'>   {{ data.wholesale_price }}</font></td>
+                
+                <td  align="center"> <font color='red'>   {{ data.cost_price }}</font> </td>
+                    
+                     
+                               
+                
+                {% else  %}
+                <td  align="center">    {{ data.sku_id }} </td>
+
+                <td  align="center">  {{ data.sku_name }} </td>
+
+                <td  align="center">  {{ data.retail_price }} </td>
+
+                <td  align="center">  {{ data.wholesale_price }} </td>
+
+                
+
+                <td  align="center">  {{ data.cost_price }} </td>
+                
+                               
+                {% endif %}
+              
+               
+                {% if  data.error_message %}
+
+                <td align="center">
+                 <font color='red'>   {{ data.error_message }}</font> 
+                </td>
+
+                {% endif %}
+
+                {% if not data.error_message %}
+                 <td  align="center">  Ok <input type="hidden" name="{{ data.sku_id }}" value="{{ data.sku_id }}"> </td>
+                   
+                {% endif %}
+
+
+                </h4>
+           
+            </tr>
+             {%  endfor %}
+
+         
+             {% if ok_records != total_records %}
+             <tr></tr>
+              <tr><td colspan="4" align="center"> <font color="red"> *** Note: Records in red will not be uploaded! </font></td></tr>
+               {% endif %}
+
+    </tbody>
+    </table>
+</form>
+</div>
+ {% endif %}
+
+   {%if sku_after_data_type %}
+
+        <div> <center> <h2> <b>SKU PRICE UPLOADED DATA  </b></h2>
+         </center> </div>
+         
+        <center> <a href="{% url 'reports:index' %}" > 
+        <div align="center"><input type="Button" value="Back To Reports" style="background-color:#fa0505;color:white;"></a> </div>
+        <p>  <h3> {{ count_data }} </h3>
+          {% if sku_update %}
+            <p> {{ sku_update }} Records Updated !
+            {% endif %}      
+        <table>
+            <thead>
+                <tr>
+                    <th><center>SNo</th>
+                    <th><center>SKU Id</th>
+                    <th><center>SKU Name</th>
+                    <th> <center>Retail Price</th>
+                    <th> <center>Wholesale Price</th>
+                    <th> <center>Cost Price</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                  
+                {%for data in sku_updated_data %}
+                <tr>
+                   <center>
+                    <td align="center"> <h4>{{ forloop.counter }}  </td>
+                    
+                     <td align="center"> <h4>{{ data.sku_id }}  </td>
+                    <td  align="center">
+                       <font color="#00008B">  {{ data.sku_name }}
+                    </td>
+                    
+                     <td  align="center">
+                         <font color="#00008B"> {{ data.retail_price }}
+                    </td>
+
+                     <td  align="center">
+                         <font color="#00008B"> {{ data.wholesale_price }}
+                    </td>
+
+                     <td  align="center">
+                         <font color="#00008B"> {{ data.cost_price }}
+                    </td>
+
+                    </h4>
+               
+                </tr>
+                 {%  endfor %}
+
+                  {%for data in sku_not_updated_data %}
+                <tr>
+                   <center>
+                    <td align="center"> <h4>{{ forloop.counter }}  </td>
+                    
+                    <td  align="center">
+                       <font color="red">  {{ data.sku_id }}
+                    </td>
+                    <td  align="center">
+                         <font color="red"> {{ data.sku_name }}
+                    </td>
+        
+                    <td  align="center">
+                         <font color="red"> {{ data.retail_price }}
+                    </td>
+
+                     <td  align="center">
+                         <font color="red"> {{ data.wholesale_price }}
+                    </td>
+
+                    <td  align="center">
+                         <font color="red"> {{ data.cost_price }}
+                    </td>
+
+                    </h4>
+               
+                </tr>
+                {%  endfor %}
+
+                
+
+                {%for data in sku_updated_record_data %}
+                
+                <tr>
+                   <center>
+                    <td align="center"> <h4>{{ forloop.counter }}  </td>
+                    
+                     <td align="center"> <h4>{{ data.sku_id }}  </td>
+                    <td  align="center">
+                       <font color="#00008B">  {{ data.sku_name }}
+                    </td>
+                    
+                     <td  align="center">
+                         <font color="#00008B"> {{ data.retail_price }}
+                    </td>
+
+                     <td  align="center">
+                         <font color="#00008B"> {{ data.wholesale_price }}
+                    </td>
+
+                     <td  align="center">
+                         <font color="#00008B"> {{ data.cost_price }}
+                    </td>
+
+                    </h4>
+               
+                </tr>
+                {%  endfor %}
+
+             
+                    
+            {%if sku_no_data_to_update %} 
+            
+            <h3> 
+            
+            "There are No Records to Update!" 
+             
+        </h3>
+        {% endif %} 
+               
+        </tbody>
+        </table>
+    </form>
+    </div>
+     {% endif %}
+ 
+
+{% endblock %}
+
+{% block object-tools %}{% endblock %}

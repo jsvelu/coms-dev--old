@@ -1,0 +1,11 @@
+[Unit]
+Description=newage gunicorn daemon
+After=syslog.target
+After=network.target
+
+[Service]
+WorkingDirectory=/home/ubuntu/app
+ExecStart=/bin/bash /home/ubuntu/app/configs/gunicorn_start.sh
+
+[Install]
+WantedBy=multi-user.target

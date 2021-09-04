@@ -1,0 +1,54 @@
+<div id="planner">
+    <top-bar>
+        <h2 class="top-bar__title">Dealer Schedule Planner</h2>
+    </top-bar>
+
+    <messages></messages>
+        <!-- <input type="month" name="month_picker" value="2021-02"> -->
+
+        <input type="month"  ng-model="month_picker" ng-change="monthpicker_selection()">
+        
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 50px;">SNo</th>
+                <th style="width: 50px;">Dealer Id</th>
+                <th>Dealer Name</th>
+                <th>Dealer Order Count for the Month</th>
+                <th>Capacity Allotted</th>
+                
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="dealer_data in all_data">
+                
+                <td style="width: 50px;"> {{$index + 1}}</td>
+
+                <td style="width: 50px;">{{ dealer_data.dealer_id}}</td>
+
+                <td> {{ dealer_data.name[0] }}</td>
+                <td ng-style="{color: dealer_data.dealer_order_count > dealer_data.capacity_allotted ? 'red' : 'black'}">
+                    {{ dealer_data.dealer_order_count }}</td>
+             
+             <td>
+                <input type="text" class="form-control" id="{{dealer_data.dealer_id}}"  
+                    ng-model="dealer_data.capacity_allotted" ng-change="capacity_sum()"/>
+            </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    Capacity Allocated&nbsp;</td><td><input type="text" class="form-control" ng-model="actual_capacity" readonly> 
+                 </td>
+                <td>
+                    Total:Capacity&nbsp;</td><td><input type="text" class="form-control" ng-model="total_capacity" readonly> 
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <div class="footer">
+        <button ng-if="permissions.change_schedule_planner" class="btn btn-primary btn-lg btn-danger" ng-click="save()" ng-disabled="total_capacity > actual_capacity">Save changes</button>
+        <center><p ng-show="total_capacity > actual_capacity" style="color: red;">Input capacity should be less than or equal to Allocated Capacity</p></center>
+    </div>
+</div>

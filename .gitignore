@@ -1,0 +1,14 @@
+*.mwb.bak
+*.pyc
+.DS_Store
+SECRET_KEY
+.idea/
+assets/
+!frontend/bower_components/bootstrap-sass/assets/
+frontend/dist/dev/*
+media/*
+nac/assets/
+quicksql/
+node_modules*/
+requirements/src/
+test-e2e/dbdumps/

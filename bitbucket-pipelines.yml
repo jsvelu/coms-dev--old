@@ -1,0 +1,21 @@
+# This is a sample build configuration for Python.
+# Check our guides at https://confluence.atlassian.com/x/x4UWN for more examples.
+# Only use spaces to indent your .yml configuration.
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+image: python:3.7.3
+
+pipelines:
+  branches:
+   test:
+    - step:
+        name: Deploy to Test Environment 
+        deployment: Test
+        caches:
+          - pip
+        script: 
+          #- pip install -r requirements.txt
+           - sh scripts/dependencies.sh
+           - zip -r COMS-$date-$bnum.zip . -x "*.git*" -x "*bitbucket-pipelines.yml*"
+           - aws s3 --region ap-southeast-2 cp COMS-$date-$bnum.zip s3://$TEST_S3_BUCKET/
+           - aws deploy --region ap-southeast-2 create-deployment --application-name $TEST_CODEDEPLOY_APP --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name $TEST_CODEDEPLOY_GROUP --description "COMS deployment Automation" --s3-location bucket=$TEST_S3_BUCKET,bundleType=zip,key=COMS-$date-$bnum.zip

